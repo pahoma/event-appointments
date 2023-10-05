@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Your QR Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            background-color: #ffffff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .qr-code {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>Your QR Code</h2>
+        <p>Scan the below QR code to access the provided information.</p>
+    </div>
+    <div class="qr-code">
+        <img src="data:image/png;base64,{IMAGE_STRING}" alt="You QR Code">
+    </div>
+</div>
+</body>
+</html>

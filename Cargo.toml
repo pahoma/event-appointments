@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "tickets_cli",
+    "web_server",
+    "shared"
+]

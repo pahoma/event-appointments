@@ -1,9 +1,10 @@
 use std::io::{self, BufRead};
 use tokio::task;
 use chrono::{NaiveDateTime, DateTime};
-use shared::domain::{AppointmentFormat, NewAppointment, Uri};
+use shared::domain::{AppointmentFormat, NewAppointment};
 use std::time::Duration;
 use anyhow::Error;
+use reqwest::Url;
 use uuid::Uuid;
 use shared::configuration::get_configuration;
 
@@ -109,8 +110,8 @@ async fn read_optional_address(format: &AppointmentFormat, prompt: &str) -> Opti
 ///
 /// # Returns
 ///
-/// - An optional `Uri` containing the user's input URI or `None`.
-async fn read_uri_input(format: &AppointmentFormat, prompt: &str) -> Option<Uri> {
+/// - An optional `Url` containing the user's input URI or `None`.
+async fn read_uri_input(format: &AppointmentFormat, prompt: &str) -> Option<Url> {
     loop {
         match format {
             AppointmentFormat::OFFLINE => {
@@ -122,7 +123,7 @@ async fn read_uri_input(format: &AppointmentFormat, prompt: &str) -> Option<Uri>
                 match input.as_str().trim() {
                     "none" => return None,
                     _ => {
-                        match Uri::parse(input) {
+                        match Url::parse(input.as_str()) {
                             Ok(uri) => return Some(uri),
                             Err(e) => {
                                 println!("Error: {}", e);
@@ -285,7 +286,7 @@ mod tests {
             description: "Test Description".to_string(),
             format: AppointmentFormat::ONLINE,
             address: None,
-            link: Some(Uri::from_str("http://www.rust.com/").unwrap()),
+            link: Some(Url::from_str("http://www.rust.com/").unwrap()),
             date: NaiveDateTime::from_timestamp(1672531200, 0), // Arbitrary date
             duration: Duration::from_secs(3600), // 1 hour
         }

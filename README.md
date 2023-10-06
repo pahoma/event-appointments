@@ -1,5 +1,5 @@
+# Event Appointments Service
 
-#Event Appointments Service
 This service is composed of three main parts:
 
 - Web Server: Manages the main interface and API endpoints.
@@ -104,7 +104,6 @@ Once the server is up and running, you can use various endpoints to manage appoi
 
 ## Features:
 
-- **Database Initialization**: Set up your database connection and execute migrations with ease.
 - **User Authentication**: A command specifically dedicated to handle user authentication.
 - **Appointment Management**: Execute a range of appointment related tasks directly from your terminal.
     - Create new appointments
@@ -124,42 +123,41 @@ tickets_cli [OPTIONS] <SUBCOMMAND>
 
 ### Commands:
 
-- `Init`: Initializes the connection to the database and executes migrations.
-- `Auth`: Handles user authentication.
-- `Appointment`: Manages appointment interactions.
+- `auth`: Handles user authentication.
+- `appointment`: Manages appointment interactions.
 
   #### Appointment Subcommands:
 
-    - `Create`: Creates a new appointment.
-    - `Delete`: Deletes a specified appointment. Provide the IDs of the appointments to delete using the `-uuids` flag.
-    - `Generate`: Generates QR codes for a specified appointment. Use the `-appt_id` flag to specify the appointment and `-count` to indicate the number of QR codes.
-    - `Send`: Sends emails containing QR codes for a specific appointment. Use the `-appt_id` flag to specify the appointment and `-email` to list the email addresses.
+    - `create`: Creates a new appointment.
+    - `delete`: Deletes a specified appointment. Provide the IDs of the appointments to delete using the `--uuids` flag.
+    - `generate`: Generates QR codes for a specified appointment. Use the `--appt_id` flag to specify the appointment and `--count` to indicate the number of QR codes.
+    - `send`: Sends emails containing QR codes for a specific appointment. Use the `--appt_id` flag to specify the appointment and `--email` to list the email addresses.
     
 ## Getting Started:
 
 1. Create new `Appointment` command for appointment-related operations:
 
 ```bash
-tickets_cli Appointment Create
+tickets_cli appointment Create
 ```
 
 2. Generate new `Invitation` command for appointment-related operations:
 ```bash
-tickets_cli Appointment Generate -appt_id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx 
-tickets_cli Appointment Generate -appt_id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx -count N
+tickets_cli appointment generate --appt_id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx 
+tickets_cli appointment generate --appt_id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx --count N
 ```
 As a result, you'll get path's to genetated QR images
 
 3. To generate and send new `Invitation` by emails you can use:
 ```bash
-tickets_cli Appointment Send -appt_id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx 
+tickets_cli appointment send --appt_id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx 
 ```
 
 4. To remove `Appointment` you can use:
 ```bash
-tickets_cli Appointment Delete
+tickets_cli appointment delete
 or
-tickets_cli Appointment Delete -uuids xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx -uuids xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx 
+tickets_cli appointment delete --uuids xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx --uuids xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx 
 ```
 
 ## Conclusion:

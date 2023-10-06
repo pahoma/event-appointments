@@ -2592,6 +2592,7 @@ dependencies = [
  "sqlx",
  "thiserror",
  "tokio",
+ "url",
  "uuid",
  "validator",
  "wiremock",
@@ -3033,6 +3034,7 @@ dependencies = [
  "shared",
  "structopt",
  "tokio",
+ "url",
  "uuid",
 ]
 
@@ -3531,6 +3533,7 @@ dependencies = [
  "tracing-bunyan-formatter",
  "tracing-log",
  "tracing-subscriber",
+ "url",
  "uuid",
 ]
 

@@ -32,16 +32,22 @@ pub(crate) async fn validate_invitation_by_id(
     let midnight_time = chrono::NaiveTime::from_hms_opt(00, 00, 00).expect("Failed to create midnight time");
     let yesterday = NaiveDateTime::new(previous_date, midnight_time);
 
-    println!("{} {} {}",  invitation.date.date(), yesterday.date(), invitation.date < yesterday);
+    tracing::info!("{} {} {}",  invitation.date.date(), yesterday.date(), invitation.date < yesterday);
 
     if invitation.date < yesterday {
         return Err(CustomError::Forbidden("The invitation date is outdated.".to_string()));
     }
 
     let http_response = match invitation.format {
+
         AppointmentFormat::ONLINE => {
             HttpResponse::PermanentRedirect()
-                .append_header((http::header::LOCATION, invitation.link.unwrap().into_inner()))
+                .append_header((
+                    http::header::LOCATION,
+                    invitation.link
+                        .expect("Can't extract invitation url")
+                        .to_string()
+                ))
                 .finish()
         }
         AppointmentFormat::OFFLINE => {

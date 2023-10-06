@@ -82,9 +82,6 @@ pub(crate) async fn get_stored_invitations(
             .fetch_all(pool).await?
     };
 
-    let mut result = vec![];
-    for record in records {
-        result.push(Invitation::from(record))
-    }
+    let result = records.into_iter().map(Invitation::from).collect();
     Ok(result)
 }

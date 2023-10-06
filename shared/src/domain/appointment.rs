@@ -1,5 +1,7 @@
+use std::str::FromStr;
 use chrono::NaiveDateTime;
-use crate::domain::{Email, Uri};
+use crate::domain::{Email};
+use url::Url;
 use std::time::Duration;
 use uuid::Uuid;
 use serde::{Deserialize, Serialize, Deserializer, Serializer};
@@ -35,7 +37,7 @@ pub struct NewAppointment {
     pub description: String,
     pub format: AppointmentFormat,
     pub address: Option<String>,
-    pub link: Option<Uri>,
+    pub link: Option<Url>,
     pub date: NaiveDateTime,
     #[serde(serialize_with = "serialize_duration", deserialize_with = "deserialize_duration")]
     pub duration: Duration,
@@ -60,7 +62,7 @@ pub struct Appointment {
     pub description: String,
     pub format: AppointmentFormat,
     pub address: Option<String>,
-    pub link: Option<Uri>,
+    pub link: Option<Url>,
     pub date: NaiveDateTime,
     #[serde(serialize_with = "serialize_duration", deserialize_with = "deserialize_duration")]
     pub duration: Duration,
@@ -70,7 +72,7 @@ impl From<DBAppointment> for Appointment {
     fn from(db_appointment: DBAppointment) -> Self {
         let link = match db_appointment.link {
             None => None,
-            Some(s) => Some(Uri::parse(s).expect("Can't convert String to Uri"))
+            Some(s) => Some(Url::from_str(&s).expect("Can't convert String to Url"))
         };
         Appointment {
             id: db_appointment.id,
@@ -102,10 +104,10 @@ pub struct AppointmentWithInvitation {
     pub id: Uuid,
     pub appointment_id: Uuid,
     pub used: bool,
-    pub short_url: Uri,
+    pub short_url: Url,
     pub format: AppointmentFormat,
     pub address: Option<String>,
-    pub link: Option<Uri>,
+    pub link: Option<Url>,
     pub date: NaiveDateTime,
 }
 
@@ -113,9 +115,9 @@ impl From<DBAppointmentWithInvitation> for AppointmentWithInvitation {
     fn from(db_appt_with_invitation: DBAppointmentWithInvitation) -> Self {
         let link = match db_appt_with_invitation.link {
             None => None,
-            Some(s) => Some(Uri::parse(s).expect("Can't convert String to Uri"))
+            Some(s) => Some(Url::parse(&s).expect("Can't convert String to Url"))
         };
-        let short_url = Uri::parse(db_appt_with_invitation.short_url).expect("Can't convert String to Uri");
+        let short_url = Url::parse(&db_appt_with_invitation.short_url).expect("Can't convert String to Url");
         AppointmentWithInvitation {
             id: db_appt_with_invitation.id,
             appointment_id: db_appt_with_invitation.appointment_id,

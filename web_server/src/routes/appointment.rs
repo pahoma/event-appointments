@@ -2,6 +2,7 @@ use super::*;
 use shared::domain::{Appointment, DBAppointment, NewAppointment, NewInvitation, InvitationParams, SendAppointmentEmails};
 use shared::qr_client::QRClient;
 use futures::future::join_all;
+use url::Url;
 use shared::email_client::EmailClient;
 
 pub fn appointment_routes(cfg: &mut web::ServiceConfig) {
@@ -49,14 +50,16 @@ pub async fn add_invitation(
         let id = Uuid::new_v4();
         let qr_client_clone = qr_client.clone();
         async move {
-            let res = qr_client_clone.get_short_url(id.to_string()).await.unwrap();
-            (id, res.short_url)
+            match qr_client_clone.get_short_url(id.to_string()).await {
+                Ok(res) => Ok((id, res.short_url)),
+                Err(e) => Err(e),
+            }
         }
     }).collect();
 
-    let results = join_all(futures).await;
-
-    for (id, short_url) in results {
+    let results: Vec<Result<(Uuid, Url), anyhow::Error>> = join_all(futures).await;
+    for result in results {
+        let (id, short_url) = result?;
         payload.push(NewInvitation {
             id,
             appointment_id: appt_id.clone(),
@@ -64,22 +67,32 @@ pub async fn add_invitation(
         });
     }
 
-    if let Some(emails) = send_appointment_emails.email {
-        for (email, invitation) in emails.iter().zip(payload.iter()) {
-            let image_string = qr_client.generate_qr_code_base64(invitation.short_url.clone()).await?;
-            println!("{}", &image_string);
-            let email_template  = include_str!("./../templates/email.html");
-            let html_body = email_template.replace("{IMAGE_STRING}", &image_string);
-            println!("{}", &html_body);
-            let plain_body = "Hello dear customer.";
-            let _ = email_client.send_email(
-                email,
-                "You invitation",
-                &html_body,
-                &plain_body
-            ).await;
+    let mut futures = vec![];
+
+    if send_appointment_emails.email.is_some() {
+        let email_invitation_composition = send_appointment_emails.email.as_ref()
+            .expect("Can't extract email").iter().zip(payload.iter());
+        for (email, invitation) in email_invitation_composition {
+            let future = async {
+                let image_string = qr_client.generate_qr_code_base64(invitation.short_url.clone()).await?;
+                let email_template  = include_str!("./../templates/email.html");
+                let html_body = email_template.replace("{IMAGE_STRING}", image_string.as_ref());
+                let plain_body = "Hello dear customer.";
+                email_client.send_email(
+                    email,
+                    "Your invitation",
+                    &html_body,
+                    &plain_body
+                ).await.map_err(|e| anyhow::anyhow!(e))
+            };
+            futures.push(future);
         }
     }
+
+    for result in join_all(futures).await {
+        result?;
+    }
+
 
     let mut transaction = open_transaction(pool).await?;
 
@@ -109,7 +122,7 @@ async fn preserve_new_invitations(
         b
             .push_bind(new_invitation.id)
             .push_bind(new_invitation.appointment_id)
-            .push_bind(new_invitation.short_url.clone().into_inner());
+            .push_bind(new_invitation.short_url.as_str().to_string());
     });
 
     let query = query_builder.build();
@@ -148,7 +161,7 @@ async fn preserve_new_appointment(
 
     let link = match new_appointment.link {
         None => None,
-        Some(link) => Some(link.into_inner())
+        Some(link) => Some(link.to_string())
     };
     let resp = sqlx::query(
         r#"

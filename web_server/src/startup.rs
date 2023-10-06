@@ -16,7 +16,7 @@ pub fn run(listener: TcpListener, pool: Pool<Postgres>, qrclient: QRClient, emai
     let server = HttpServer::new(move || {
         App::new()
             .wrap(TracingLogger::default())
-            .route("/",
+            .route("/status",
                    web::get().to(|| async { HttpResponse::Ok().body("/") })
             )
             .service(web::scope("/api")

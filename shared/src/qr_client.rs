@@ -2,27 +2,27 @@ use std::io::Cursor;
 use std::path::Path;
 use reqwest::{Client};
 use secrecy::{ExposeSecret, Secret};
-use crate::domain::Uri;
 use serde::Deserialize;
 use qrcode::QrCode;
 use tokio::fs;
 use uuid::Uuid;
 use base64::encode;
 use image::{Luma, DynamicImage};
+use url::Url;
 
 pub struct QRClient {
     http_client: Client,
-    api_url: Uri,
+    api_url: Url,
     api_key: Secret<String>,
-    base_url: Uri,
+    base_url: Url,
     base_image_path: String,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct ShortUrlResponse {
     pub hash: String,
-    pub short_url: Uri,
-    pub long_url: Uri,
+    pub short_url: Url,
+    pub long_url: Url,
 }
 
 impl QRClient {
@@ -34,8 +34,8 @@ impl QRClient {
         timeout: std::time::Duration,
     ) -> Self {
         let http_client = Client::builder().timeout(timeout).build().unwrap();
-        let api_url = Uri::parse(api_url).unwrap();
-        let base_url =  Uri::parse(base_url).unwrap();
+        let api_url = Url::parse(&api_url).unwrap();
+        let base_url =  Url::parse(&base_url).unwrap();
         Self {
             http_client,
             api_url,
@@ -62,7 +62,7 @@ impl QRClient {
 
     pub async fn generate_qr_code(
         &self,
-        short_url: Uri,
+        short_url: Url,
         appt_id: Uuid,
         invintation_id: Uuid,
     ) -> Result<String, anyhow::Error> {
@@ -73,7 +73,7 @@ impl QRClient {
         // Asynchronously ensure the directory exists
         fs::create_dir_all(path.parent().unwrap()).await?;
 
-        let code = QrCode::new(short_url.into_inner().as_bytes())?;
+        let code = QrCode::new(short_url.as_str().as_bytes())?;
         let image = code.render::<Luma<u8>>().build();
 
         image.save(&path)?;
@@ -84,10 +84,10 @@ impl QRClient {
 
     pub async fn generate_qr_code_base64(
         &self,
-        short_url: Uri,
+        short_url: Url,
     ) -> Result<String, anyhow::Error> {
 
-        let code = QrCode::new(short_url.into_inner().as_bytes()).unwrap();
+        let code = QrCode::new(short_url.as_str().as_bytes()).unwrap();
         let image = code.render::<Luma<u8>>().build();
 
         // Convert the image into a byte vector using a Cursor
@@ -123,7 +123,7 @@ mod tests {
         let qr_client = get_qr_client();
 
         let result = qr_client.generate_qr_code(
-            Uri::parse("https://google.com.ua".to_string()).unwrap(),
+            Url::parse("https://google.com.ua").unwrap(),
             Uuid::new_v4(),
             Uuid::new_v4()
         ).await;
@@ -139,7 +139,7 @@ mod tests {
         let qr_client = get_qr_client();
 
         let result = qr_client.generate_qr_code_base64(
-            Uri::parse("https://google.com.ua".to_string()).unwrap(),
+            Url::parse("https://google.com.ua").unwrap(),
         ).await;
 
         match &result {

@@ -1,4 +1,4 @@
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use uuid::Uuid;
 use shared::configuration::{get_configuration};
 use shared::domain::{NewInvitation, SendAppointmentEmails};
@@ -45,7 +45,9 @@ pub async fn generate_invitation_handler(
     appt_id: Uuid,
     count: Option<i32>
 ) -> Result<String, Error> {
-    let configuration = get_configuration().unwrap();
+    let configuration = get_configuration()
+        .map_err(|e| anyhow!("Failed to get configuration: {}", e))?;
+
     let count: i32 = count.unwrap_or(1);
 
     let invitations = fetch_invitations(configuration.console_cli.web_url, appt_id, count).await?;

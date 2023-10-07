@@ -8,11 +8,9 @@ pub use delete::*;
 pub use generate::*;
 pub use send::*;
 
-
+#[cfg(test)]
 use std::sync::Mutex;
-use lazy_static::lazy_static;
-
-lazy_static! {
-    static ref ENV_VAR_LOCK_TEST: Mutex<()> = Mutex::new(());
-}
-
+#[cfg(test)]
+use once_cell::sync::Lazy;
+#[cfg(test)]
+static ENV_VAR_LOCK_TEST: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));

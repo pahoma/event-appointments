@@ -3,7 +3,7 @@ use tokio::task;
 use chrono::{NaiveDateTime, DateTime};
 use shared::domain::{AppointmentFormat, NewAppointment};
 use std::time::Duration;
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use reqwest::Url;
 use uuid::Uuid;
 use shared::configuration::get_configuration;
@@ -13,7 +13,7 @@ use shared::configuration::get_configuration;
 /// # Returns
 ///
 /// - An `io::Result<String>` containing the user's input or an error.
-async fn read_line() -> io::Result<String> {
+async fn read_trimmed_line() -> io::Result<String> {
     task::spawn_blocking(|| {
         let mut input = String::new();
         let stdin = io::stdin();
@@ -35,10 +35,12 @@ async fn read_line() -> io::Result<String> {
 async fn read_appointment_format() -> AppointmentFormat {
     loop {
         println!("Enter format [0 || online ] - ONLINE or [ 1 || offline ] - OFFLINE):");
-        let type_str = read_line().await.expect("Failed to read format");
+        let type_str = read_trimmed_line().await.expect("Failed to read format");
         match type_str.as_str() {
             "0" => return AppointmentFormat::ONLINE,
+            "online" => return AppointmentFormat::ONLINE,
             "1" => return AppointmentFormat::OFFLINE,
+            "offline" => return AppointmentFormat::OFFLINE,
             _ => {
                 println!("Invalid format. Please enter either `online` or `offline`.");
                 continue;
@@ -61,7 +63,7 @@ async fn read_appointment_format() -> AppointmentFormat {
 async fn read_non_empty_input(prompt: &str) -> String {
     loop {
         println!("{}", prompt);
-        let input = read_line().await.expect("Failed to read input");
+        let input = read_trimmed_line().await.expect("Failed to read input");
         if !input.is_empty() {
             return input;
         }
@@ -89,7 +91,7 @@ async fn read_optional_address(format: &AppointmentFormat, prompt: &str) -> Opti
             }
             AppointmentFormat::OFFLINE => {
                 println!("{}", prompt);
-                let input = read_line().await.expect("Failed to read input");
+                let input = read_trimmed_line().await.expect("Failed to read input");
                 return match input.as_str() {
                     "none" => continue,
                     _ => Some(input),
@@ -110,7 +112,7 @@ async fn read_optional_address(format: &AppointmentFormat, prompt: &str) -> Opti
 ///
 /// # Returns
 ///
-/// - An optional `Url` containing the user's input URI or `None`.
+/// - An optional `Url` containing the user's input URL or `None`.
 async fn read_uri_input(format: &AppointmentFormat, prompt: &str) -> Option<Url> {
     loop {
         match format {
@@ -119,7 +121,7 @@ async fn read_uri_input(format: &AppointmentFormat, prompt: &str) -> Option<Url>
             }
             AppointmentFormat::ONLINE => {
                 println!("{}", prompt);
-                let input = read_line().await.expect("Failed to read input");
+                let input = read_trimmed_line().await.expect("Failed to read input");
                 match input.as_str().trim() {
                     "none" => return None,
                     _ => {
@@ -165,7 +167,7 @@ async fn read_uri_input(format: &AppointmentFormat, prompt: &str) -> Option<Url>
 async fn read_duration_in_minutes_input(prompt: &str, error_msg: &str) -> Duration {
     loop {
         println!("{}", prompt);
-        let input = read_line().await.expect("Failed to read input");
+        let input = read_trimmed_line().await.expect("Failed to read input");
         match input.parse::<u64>() {
             Ok(value) => return Duration::from_secs(value * 60), // Convert minutes to seconds
             Err(_) => println!("{}", error_msg),
@@ -202,7 +204,7 @@ async fn read_duration_in_minutes_input(prompt: &str, error_msg: &str) -> Durati
 async fn read_datetime_input(prompt: &str, error_msg: &str) -> NaiveDateTime {
     loop {
         println!("{}", prompt);
-        let input = read_line().await.expect("Failed to read input");
+        let input = read_trimmed_line().await.expect("Failed to read input");
 
         // Try parsing it directly as "yyyy/mm/dd hh:mm" format
         if let Ok(naive_dt) = NaiveDateTime::parse_from_str(&input, "%Y/%m/%d %H:%M") {
@@ -259,7 +261,8 @@ pub async fn new_appointment_handler() -> Result<String, Error> {
 
 async fn send_new_appointment_handler(appointment: NewAppointment) -> Result<String, Error> {
     let client = reqwest::Client::new();
-    let configuration = get_configuration().unwrap();
+    let configuration = get_configuration()
+        .map_err(|e| anyhow!("Failed to get configuration: {}", e))?;
 
     println!("{:?}", appointment);
 
@@ -281,13 +284,14 @@ mod tests {
     use crate::appointment::ENV_VAR_LOCK_TEST;
 
     fn mock_read_new_appointment_from_stdin() -> NewAppointment {
+        let date = NaiveDateTime::from_timestamp_opt(1672531200, 0).expect("Invalid timestamp provided");
         NewAppointment {
             title: "Test Title".to_string(),
             description: "Test Description".to_string(),
             format: AppointmentFormat::ONLINE,
             address: None,
             link: Some(Url::from_str("http://www.rust.com/").unwrap()),
-            date: NaiveDateTime::from_timestamp(1672531200, 0), // Arbitrary date
+            date, // Arbitrary date
             duration: Duration::from_secs(3600), // 1 hour
         }
     }

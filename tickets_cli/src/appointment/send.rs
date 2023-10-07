@@ -1,4 +1,4 @@
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use uuid::Uuid;
 use shared::domain::{Email, NewInvitation, SendAppointment, SendAppointmentEmails};
 use tokio::{io, task};
@@ -61,7 +61,8 @@ pub async fn send_invitation_letter_handler(
     appt_id: Uuid,
     email: Vec<Email>
 ) -> Result<String, Error> {
-    let configuration = get_configuration().unwrap();
+    let configuration = get_configuration()
+        .map_err(|e| anyhow!("Failed to get configuration: {}", e))?;
 
     let email_list = if email.is_empty() {
         read_emails().await?
@@ -125,6 +126,6 @@ mod tests {
         env::remove_var("APP_CONSOLE_CLI__WEB_URL");
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), r#"Generated invintations: [NewInvitation { id: 6ba7b810-9dad-11d1-80b4-00c04fd430c8, appointment_id: 6ba7b812-9dad-11d1-80b4-00c04fd430c9, short_url: Url("https://example.com/shorturl") }]"#);
+        assert_eq!(result.unwrap(), "Generated invintations: [NewInvitation { id: 6ba7b810-9dad-11d1-80b4-00c04fd430c8, appointment_id: 6ba7b812-9dad-11d1-80b4-00c04fd430c9, short_url: Url { scheme: \"https\", cannot_be_a_base: false, username: \"\", password: None, host: Some(Domain(\"example.com\")), port: None, path: \"/shorturl\", query: None, fragment: None } }]");
     }
 }

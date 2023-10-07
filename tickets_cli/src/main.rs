@@ -17,7 +17,8 @@ use crate::cli::{AppointmentCommand, CliArgs, Command};
 
 /// QRClient instance initialized lazily based on the application's configuration.
 static QR_CLIENT: Lazy<QRClient> = Lazy::new(|| {
-    let configuration = get_configuration().unwrap();
+    let configuration = get_configuration()
+        .expect("Failed to get configuration for QRClient initialization");
 
     QRClient::new(
         configuration.qr_client.api_url.clone(),
@@ -60,21 +61,21 @@ async fn main() -> anyhow::Result<()> {
 /// # Returns
 ///
 /// * `Result<String, Box<dyn std::error::Error>>` - The result of the command's execution or an error.
-async fn execute_cmd(args: CliArgs) -> Result<String, Box<dyn std::error::Error>> {
+async fn execute_cmd(args: CliArgs) -> Result<String, anyhow::Error> {
     let response = match args.cmd {
         Command::Appointment(appt_cmd) => {
             match appt_cmd.appt_command {
                 AppointmentCommand::Create => {
-                    new_appointment_handler().await.unwrap()
+                    new_appointment_handler().await?
                 }
-                AppointmentCommand::Delete { uuids} => {
-                    delete_appointment_handler(uuids).await.unwrap().to_string()
+                AppointmentCommand::Delete { uuids } => {
+                    delete_appointment_handler(uuids).await?.to_string()
                 }
                 AppointmentCommand::Generate { appt_id, count } => {
-                    generate_invitation_handler(appt_id, count).await.unwrap()
+                    generate_invitation_handler(appt_id, count).await?
                 }
                 AppointmentCommand::Send { appt_id, email } => {
-                    send_invitation_letter_handler(appt_id, email).await.unwrap()
+                    send_invitation_letter_handler(appt_id, email).await?
                 }
             }
         }

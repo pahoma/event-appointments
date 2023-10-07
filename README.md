@@ -83,17 +83,17 @@ Once the server is up and running, you can use various endpoints to manage appoi
 
 ## Endpoints
 
-###Appointments
+### Appointments
     Create:             POST /api/appointment       
     Get by ID:          GET /api/appointment/{id}
     Delete by ID:       DELETE /api/appointment/{id}             
     Add Invitation:     POST /api/appointment/{id}/invitation`
 
-###Invitations
+### Invitations
     Get by ID:          GET /api/invitation/{id}
     Get QR Code:        GET /api/invitation/{id}/qr
 
-###Validation
+### Validation
     Validate by ID      GET /api/validations/{id}
 
 ---

@@ -4,7 +4,6 @@ mod cli;
 mod appointment;
 
 use once_cell::sync::Lazy;
-use tokio;
 use structopt::StructOpt;
 use shared::configuration::get_configuration;
 use shared::qr_client::QRClient;

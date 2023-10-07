@@ -26,7 +26,10 @@ pub async fn get_invitation_qr(
     qr_client: Data<QRClient>
 ) -> Result<HttpResponse, CustomError> {
     let invitation_id = invitation_id.into_inner();
-    let response = get_stored_invitations(pool.as_ref(), Some(invitation_id.clone())).await?;
+    let response = get_stored_invitations(
+        pool.as_ref(),
+        Some(invitation_id)
+    ).await?;
     let qr_client = qr_client.into_inner();
 
     if response.is_empty() {
@@ -69,7 +72,7 @@ pub(crate) async fn get_stored_invitations(
         FROM invitation
     ".to_string();
 
-    if let Some(_) = appointment_id {
+    if appointment_id.is_some() {
         query.push_str(" WHERE id = $1 ");
     }
 

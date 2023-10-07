@@ -23,7 +23,7 @@ pub(crate) async fn open_transaction(pool: Data<PgPool>) -> Result<Transaction<'
 }
 
 pub(crate) async fn commit_transaction(transaction: Transaction<'_, Postgres>, msg: &'static str) -> Result<(), CustomError> {
-    let _ = transaction
+    transaction
         .commit()
         .await
         .context(msg)?;

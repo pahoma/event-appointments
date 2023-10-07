@@ -6,7 +6,7 @@ use crate::configuration::get_configuration;
 pub async fn initialize() -> Result<PgPool,  Error> {
     let configuration = get_configuration().expect("Failed to read configuration.");
     let pool = init_db(configuration.database.connection_options_with_db())?;
-    let _ = migrate(&pool).await?;
+    migrate(&pool).await?;
 
     Ok(pool)
 }

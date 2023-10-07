@@ -70,10 +70,9 @@ pub struct Appointment {
 
 impl From<DBAppointment> for Appointment {
     fn from(db_appointment: DBAppointment) -> Self {
-        let link = match db_appointment.link {
-            None => None,
-            Some(s) => Some(Url::from_str(&s).expect("Can't convert String to Url"))
-        };
+        let link = db_appointment
+            .link
+            .map(|s| Url::from_str(&s).expect("Can't convert String to Url"));
         Appointment {
             id: db_appointment.id,
             title: db_appointment.title,
@@ -113,10 +112,10 @@ pub struct AppointmentWithInvitation {
 
 impl From<DBAppointmentWithInvitation> for AppointmentWithInvitation {
     fn from(db_appt_with_invitation: DBAppointmentWithInvitation) -> Self {
-        let link = match db_appt_with_invitation.link {
-            None => None,
-            Some(s) => Some(Url::parse(&s).expect("Can't convert String to Url"))
-        };
+        let link = db_appt_with_invitation
+            .link
+            .map(|s| Url::parse(&s).expect("Can't convert String to Url"));
+
         let short_url = Url::parse(&db_appt_with_invitation.short_url).expect("Can't convert String to Url");
         AppointmentWithInvitation {
             id: db_appt_with_invitation.id,

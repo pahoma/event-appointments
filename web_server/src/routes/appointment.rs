@@ -63,7 +63,7 @@ pub async fn add_invitation(
         let (id, short_url) = result?;
         payload.push(NewInvitation {
             id,
-            appointment_id: appt_id.clone(),
+            appointment_id: appt_id,
             short_url
         });
     }
@@ -83,7 +83,7 @@ pub async fn add_invitation(
                     email,
                     "Your invitation",
                     &html_body,
-                    &plain_body
+                    plain_body
                 ).await.map_err(|e| anyhow::anyhow!(e))
             };
             futures.push(future);
@@ -97,7 +97,7 @@ pub async fn add_invitation(
 
     let mut transaction = open_transaction(pool).await?;
 
-    let _ = preserve_new_invitations(&mut transaction, &payload).await?;
+    preserve_new_invitations(&mut transaction, &payload).await?;
 
     commit_transaction(transaction, "Failed to commit SQL transaction to store a new course.")
         .await?;
@@ -160,10 +160,11 @@ async fn preserve_new_appointment(
     new_appointment: NewAppointment
 ) -> Result<Uuid, CustomError> {
 
-    let link = match new_appointment.link {
-        None => None,
-        Some(link) => Some(link.to_string())
-    };
+    // let link = match new_appointment.link {
+    //     None => None,
+    //     Some(link) => Some(link.to_string())
+    // };
+    let link = new_appointment.link.map(|link| link.to_string());
     let resp = sqlx::query(
         r#"
             INSERT INTO appointment (title, description, format, address, link, date, duration)
@@ -215,7 +216,7 @@ async fn get_stored_appointments(
         FROM appointment
     ".to_string();
 
-    if let Some(_) = appointment_id {
+    if appointment_id.is_some() {
         query.push_str(" WHERE id = $1 ");
     }
 

@@ -66,8 +66,8 @@ impl QRClient {
         appt_id: Uuid,
         invintation_id: Uuid,
     ) -> Result<String, anyhow::Error> {
-        let filename = format!("{}.png", invintation_id.to_string());
-        let path_str = format!("{}/{}", self.base_image_path, appt_id.to_string());
+        let filename = format!("{}.png", invintation_id);
+        let path_str = format!("{}/{}", self.base_image_path, appt_id);
         let path = Path::new(&path_str).join(filename);
 
         // Asynchronously ensure the directory exists

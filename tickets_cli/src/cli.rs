@@ -16,12 +16,6 @@ pub struct CliArgs {
 
 #[derive(Debug, StructOpt)]
 pub(crate) enum Command {
-    /// Initializes the connection to the database and executes migrations.
-    Init,
-
-    /// Handles user authentication.
-    Auth,
-
     /// Manages appointment interactions.
     Appointment(Appointment),
 }

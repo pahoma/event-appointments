@@ -4,8 +4,8 @@ application:
 database:
   host: "127.0.0.1"
   port: 5432
-  username: "rustua"
-  password: "rustua"
+  username: "capstone"
+  password: "capstone"
   database_name: "capstone"
 email_client:
   base_url: "localhost"

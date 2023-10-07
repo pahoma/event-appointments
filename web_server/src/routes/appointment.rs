@@ -13,6 +13,7 @@ pub fn appointment_routes(cfg: &mut web::ServiceConfig) {
         .service(
             web::resource("/appointment/{id}")
                 .route(web::get().to(get_appointment_by_id))
+                .route(web::delete().to(delete_appointment))
         )
         .service(
             web::resource("/appointment/{id}/invitation")
@@ -186,6 +187,10 @@ async fn preserve_new_appointment(
     Ok(id)
 }
 
+#[tracing::instrument(
+    name = "Get appointment by id",
+    skip(pool)
+)]
 pub async fn get_appointment_by_id(
     pool: Data<PgPool>,
     appointment_id: web::Path<Uuid>
@@ -228,4 +233,44 @@ async fn get_stored_appointments(
         result.push(Appointment::from(record))
     }
     Ok(result)
+}
+
+
+#[tracing::instrument(
+    name = "Delete appointment",
+    skip(pool)
+)]
+pub async fn delete_appointment(
+    pool: Data<PgPool>,
+    appointment_id: web::Path<Uuid>
+) -> Result<HttpResponse, CustomError> {
+
+    let mut transaction = open_transaction(pool).await?;
+
+    let response = delete_stored_appointment(&mut transaction, appointment_id.into_inner()).await?;
+
+    commit_transaction(transaction, "Failed to commit SQL transaction to store a new course.")
+        .await?;
+
+    Ok(
+        HttpResponse::Ok()
+            .json(response)
+    )
+}
+
+#[tracing::instrument(
+    name = "Remove appointment stored in DB",
+    skip(transaction)
+)]
+async fn delete_stored_appointment(
+    transaction: &mut Transaction<'_, Postgres>,
+    appointment_id: Uuid
+) -> Result<bool, CustomError> {
+    let rows_affected = sqlx::query("DELETE FROM appointment WHERE id = $1")
+        .bind(appointment_id)
+        .execute(&mut **transaction)
+        .await?
+        .rows_affected();
+
+    Ok(rows_affected > 0)
 }

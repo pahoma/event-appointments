@@ -52,8 +52,6 @@ async fn main() -> anyhow::Result<()> {
 /// Executes the command specified in the given `CliArgs`.
 ///
 /// Based on the parsed command line arguments, it performs various actions such as:
-/// - Initializing the database
-/// - Authentication-related tasks
 /// - Appointment-related tasks including creation, deletion, generating QR invitations, and sending email invitations.
 ///
 /// # Parameters
@@ -65,13 +63,6 @@ async fn main() -> anyhow::Result<()> {
 /// * `Result<String, Box<dyn std::error::Error>>` - The result of the command's execution or an error.
 async fn execute_cmd(args: CliArgs) -> Result<String, Box<dyn std::error::Error>> {
     let response = match args.cmd {
-        Command::Init => {
-            let _ = shared::db::initialize().await.unwrap();
-            "Init".to_string()
-        },
-        Command::Auth => {
-            todo!();
-        },
         Command::Appointment(appt_cmd) => {
             match appt_cmd.appt_command {
                 AppointmentCommand::Create => {

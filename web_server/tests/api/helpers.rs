@@ -3,7 +3,6 @@ use sqlx::{Connection, PgConnection, PgPool, Executor};
 use uuid::Uuid;
 use shared::configuration::{DatabaseSettings, get_configuration};
 use web_server::startup::run;
-use sqlx::Error;
 use once_cell::sync::Lazy;
 use tracing::metadata::LevelFilter;
 use shared::email_client::EmailClient;
@@ -25,28 +24,6 @@ static APP_TRACING: Lazy<()> = Lazy::new(|| {
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
-}
-
-impl TestApp {
-    pub(crate) async fn drop_app(&self) -> Result<(), Error> {
-        let connect_options = self.db_pool.connect_options();
-        let db_name = connect_options.get_database().unwrap();
-        self.db_pool.close().await;
-
-        let configuration = get_configuration().expect("Failed to read configuration.");
-
-        let mut connection = PgConnection::connect_with(&configuration.database.connection_options_base())
-            .await
-            .expect("Failed to connect to Postgres");
-
-        connection
-            .execute(&*format!(r#"DROP DATABASE "{}";"#, db_name))
-            .await
-            .expect("Failed to drop database.");
-
-        let _ = connection.close().await?;
-        Ok(())
-    }
 }
 
 pub async fn spawn_app() -> TestApp {
@@ -93,6 +70,7 @@ pub async fn spawn_app() -> TestApp {
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
 
     // Create database
+
     let mut connection = PgConnection::connect_with(&config.connection_options_base())
         .await
         .expect("Failed to connect to Postgres");

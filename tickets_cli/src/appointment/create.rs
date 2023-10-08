@@ -37,10 +37,8 @@ async fn read_appointment_format() -> AppointmentFormat {
         println!("Enter format [0 || online ] - ONLINE or [ 1 || offline ] - OFFLINE):");
         let type_str = read_trimmed_line().await.expect("Failed to read format");
         match type_str.as_str() {
-            "0" => return AppointmentFormat::ONLINE,
-            "online" => return AppointmentFormat::ONLINE,
-            "1" => return AppointmentFormat::OFFLINE,
-            "offline" => return AppointmentFormat::OFFLINE,
+            "0" | "online" => return AppointmentFormat::ONLINE,
+            "1" | "offline" => return AppointmentFormat::OFFLINE,
             _ => {
                 println!("Invalid format. Please enter either `online` or `offline`.");
                 continue;

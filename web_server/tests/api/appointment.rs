@@ -132,7 +132,7 @@ mod appointment_tests {
             .json(&json!({}))
             .send()
             .await
-            .expect("Failed to add course to student");
+            .expect("Failed to add invitation to appointment");
 
         assert_eq!(response.status(), StatusCode::OK);
 

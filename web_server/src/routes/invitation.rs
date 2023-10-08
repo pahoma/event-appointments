@@ -1,8 +1,8 @@
 use super::*;
 
-use shared::domain::{DBInvitation, Invitation};
 use uuid::Uuid;
 use shared::qr_client::QRClient;
+use crate::repository::get_stored_invitations;
 
 
 pub fn invitation_routes(cfg: &mut web::ServiceConfig) {
@@ -20,7 +20,7 @@ pub fn invitation_routes(cfg: &mut web::ServiceConfig) {
     name = "Get invitation QR",
     skip(pool, qr_client)
 )]
-pub async fn get_invitation_qr(
+async fn get_invitation_qr(
     invitation_id: web::Path<Uuid>,
     pool: Data<PgPool>,
     qr_client: Data<QRClient>
@@ -52,7 +52,7 @@ pub async fn get_invitation_qr(
     name = "Validate invitation by id",
     skip(pool)
 )]
-pub async fn get_invitation_by_id(
+async fn get_invitation_by_id(
     invitation_id: web::Path<Uuid>,
     pool: Data<PgPool>
 ) -> Result<HttpResponse, CustomError> {
@@ -61,30 +61,4 @@ pub async fn get_invitation_by_id(
         HttpResponse::Ok()
             .json(response.first())
     )
-}
-
-pub(crate) async fn get_stored_invitations(
-    pool: &PgPool,
-    appointment_id: Option<Uuid>
-) -> Result<Vec<Invitation>, CustomError> {
-    let mut query = "
-        SELECT id, appointment_id, used, short_url
-        FROM invitation
-    ".to_string();
-
-    if appointment_id.is_some() {
-        query.push_str(" WHERE id = $1 ");
-    }
-
-    let records: Vec<DBInvitation> = if let Some(id) = appointment_id {
-        sqlx::query_as::<_, DBInvitation>(&query)
-            .bind(id)
-            .fetch_all(pool).await?
-    } else {
-        sqlx::query_as::<_, DBInvitation>(&query)
-            .fetch_all(pool).await?
-    };
-
-    let result = records.into_iter().map(Invitation::from).collect();
-    Ok(result)
 }

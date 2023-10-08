@@ -5,7 +5,7 @@ mod invitation;
 use crate::error::CustomError;
 use actix_web::{HttpResponse, Result, web};
 use actix_web::web::Data;
-use sqlx::{PgPool, Postgres, Row, Transaction, QueryBuilder};
+use sqlx::{PgPool, Postgres, Transaction};
 use anyhow::Context;
 use uuid::Uuid;
 

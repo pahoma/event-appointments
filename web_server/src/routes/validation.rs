@@ -32,7 +32,11 @@ pub(crate) async fn validate_invitation_by_id(
     let midnight_time = chrono::NaiveTime::from_hms_opt(00, 00, 00).expect("Failed to create midnight time");
     let yesterday = NaiveDateTime::new(previous_date, midnight_time);
 
-    tracing::info!("{} {} {}",  invitation.date.date(), yesterday.date(), invitation.date < yesterday);
+    tracing::info!(
+        date = %invitation.date.date(),
+        yesterday = %yesterday.date(),
+        is_before_yesterday = %(invitation.date < yesterday)
+    );
 
     if invitation.date < yesterday {
         return Err(CustomError::Forbidden("The invitation date is outdated.".to_string()));

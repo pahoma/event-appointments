@@ -63,9 +63,11 @@ impl FromStr for Email {
     }
 }
 
-impl From<String> for Email {
-    fn from(s: String) -> Self {
-        Email::parse(s).expect("Invalid email format")
+impl TryFrom<String> for Email {
+    type Error = String;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        Email::parse(s)
     }
 }
 

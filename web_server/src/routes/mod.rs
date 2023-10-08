@@ -30,3 +30,9 @@ pub(crate) async fn commit_transaction(transaction: Transaction<'_, Postgres>, m
     Ok(())
 }
 
+const EMAIL_TEMPLATE_PATH: &str = "./../templates/email.html";
+const QR_TEMPLATE_PATH: &str = "./../templates/qr.html";
+pub async fn render_template(path: &str) -> Result<String, tokio::io::Error> {
+    tokio::fs::read_to_string(path).await
+}
+

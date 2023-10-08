@@ -12,7 +12,7 @@ RUN cargo build -p web_server --release --target=aarch64-unknown-linux-musl
 
 
 # Runtime stage
-FROM alpine:3 AS runtime
+FROM cgr.dev/chainguard/static AS runtime
 WORKDIR /app
 COPY --from=builder /app/target/aarch64-unknown-linux-musl/release/web_server web_server
 COPY configuration configuration

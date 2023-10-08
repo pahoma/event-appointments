@@ -1,8 +1,10 @@
+use std::collections::HashSet;
 use anyhow::{anyhow, Error};
 use uuid::Uuid;
 use shared::domain::{Email, NewInvitation, SendAppointment, SendAppointmentEmails};
-use tokio::{io, task};
-use std::io::BufRead;
+use tokio::{io};
+use tokio::io::{AsyncBufReadExt, BufReader};
+use std::io::ErrorKind;
 use shared::configuration::get_configuration;
 
 /// Asynchronously reads a list of emails from the standard input.
@@ -16,28 +18,51 @@ use shared::configuration::get_configuration;
 ///   read from the standard input or an error.
 pub async fn read_emails() -> io::Result<Vec<Email>> {
     println!("Please list emails to send Appointment invitation':");
-    task::spawn_blocking(|| {
-        let stdin = std::io::stdin();
-        let locked = stdin.lock();
-        let mut emails = Vec::new();
 
-        for line in locked.lines() {
-            let line = line?;
-            if line.trim().is_empty() {
-                break;
-            }
-            let email = match Email::parse(line) {
-                Ok(email) => email,
-                Err(_) => return Err(io::Error::new(io::ErrorKind::InvalidData, "Failed to parse Email")),
-            };
-            emails.push(email);
+    let mut reader = BufReader::new(io::stdin());
+    let mut emails = Vec::new();
+
+    loop {
+        let mut line = String::new();
+        let bytes_read = reader.read_line(&mut line).await?;
+
+        if bytes_read == 0 || line.trim().is_empty() {
+            break;
         }
+        let email = match Email::parse(line.trim().to_string()) {
+            Ok(email) => email,
+            Err(_) => return Err(io::Error::new(ErrorKind::InvalidData, "Failed to parse Email")),
+        };
 
-        Ok(emails)
-    })
-        .await
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?
+        emails.push(email);
+    }
+
+    Ok(emails)
 }
+// pub async fn read_emails() -> io::Result<Vec<Email>> {
+//     println!("Please list emails to send Appointment invitation':");
+//     task::spawn_blocking(|| {
+//         let stdin = std::io::stdin();
+//         let locked = stdin.lock();
+//         let mut emails = Vec::new();
+//
+//         for line in locked.lines() {
+//             let line = line?;
+//             if line.trim().is_empty() {
+//                 break;
+//             }
+//             let email = match Email::parse(line) {
+//                 Ok(email) => email,
+//                 Err(_) => return Err(io::Error::new(io::ErrorKind::InvalidData, "Failed to parse Email")),
+//             };
+//             emails.push(email);
+//         }
+//
+//         Ok(emails)
+//     })
+//         .await
+//         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?
+// }
 
 /// Asynchronously handles the sending of appointment invitation letters.
 ///
@@ -70,13 +95,12 @@ pub async fn send_invitation_letter_handler(
         email
     };
 
-    let mut sorted_emails = email_list;
-    sorted_emails.sort();
-    sorted_emails.dedup();
+    let unique_emails: Vec<_> = email_list
+        .into_iter().collect::<HashSet<_>>().into_iter().collect();
 
     let payload = SendAppointment {
         id: appt_id,
-        email: sorted_emails
+        email: unique_emails
     };
 
     let client = reqwest::Client::new();
@@ -89,7 +113,7 @@ pub async fn send_invitation_letter_handler(
 
     let invitations = response.json::<Vec<NewInvitation>>().await?;
 
-    Ok(format!("Generated invintations: {:?}", invitations))
+    Ok(format!("Generated invitations: {:?}", invitations))
 }
 
 
@@ -126,6 +150,6 @@ mod tests {
         env::remove_var("APP_CONSOLE_CLI__WEB_URL");
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "Generated invintations: [NewInvitation { id: 6ba7b810-9dad-11d1-80b4-00c04fd430c8, appointment_id: 6ba7b812-9dad-11d1-80b4-00c04fd430c9, short_url: Url { scheme: \"https\", cannot_be_a_base: false, username: \"\", password: None, host: Some(Domain(\"example.com\")), port: None, path: \"/shorturl\", query: None, fragment: None } }]");
+        assert_eq!(result.unwrap(), "Generated invitations: [NewInvitation { id: 6ba7b810-9dad-11d1-80b4-00c04fd430c8, appointment_id: 6ba7b812-9dad-11d1-80b4-00c04fd430c9, short_url: Url { scheme: \"https\", cannot_be_a_base: false, username: \"\", password: None, host: Some(Domain(\"example.com\")), port: None, path: \"/shorturl\", query: None, fragment: None } }]");
     }
 }

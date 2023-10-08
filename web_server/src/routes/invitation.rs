@@ -39,7 +39,7 @@ pub async fn get_invitation_qr(
     let invitation = response.first().unwrap();
 
     let image_string = qr_client.generate_qr_code_base64(invitation.short_url.clone()).await?;
-    let qr_template  = include_str!("./../templates/qr.html");
+    let qr_template  = render_template(QR_TEMPLATE_PATH).await?;
     let formatted_html = qr_template.replace("{IMAGE_STRING}", &image_string);
     Ok(
         HttpResponse::Ok()

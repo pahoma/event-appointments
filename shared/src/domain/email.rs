@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use validator::validate_email;
 
 
-#[derive(Debug, Clone, PartialEq, Ord, PartialOrd, Eq)]
+#[derive(Debug, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct Email(String);
 
 impl Email {

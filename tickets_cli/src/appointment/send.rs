@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use anyhow::{anyhow, Error};
 use uuid::Uuid;
 use shared::domain::{Email, NewInvitation, SendAppointment, SendAppointmentEmails};
@@ -33,30 +32,6 @@ pub async fn read_emails() -> io::Result<Vec<Email>> {
 
     Ok(emails)
 }
-// pub async fn read_emails() -> io::Result<Vec<Email>> {
-//     println!("Please list emails to send Appointment invitation':");
-//     task::spawn_blocking(|| {
-//         let stdin = std::io::stdin();
-//         let locked = stdin.lock();
-//         let mut emails = Vec::new();
-//
-//         for line in locked.lines() {
-//             let line = line?;
-//             if line.trim().is_empty() {
-//                 break;
-//             }
-//             let email = match Email::parse(line) {
-//                 Ok(email) => email,
-//                 Err(_) => return Err(io::Error::new(io::ErrorKind::InvalidData, "Failed to parse Email")),
-//             };
-//             emails.push(email);
-//         }
-//
-//         Ok(emails)
-//     })
-//         .await
-//         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?
-// }
 
 /// Asynchronously handles the sending of appointment invitation letters.
 ///
@@ -89,12 +64,13 @@ pub async fn send_invitation_letter_handler(
         email
     };
 
-    let unique_emails: Vec<_> = email_list
-        .into_iter().collect::<HashSet<_>>().into_iter().collect();
+    let mut sorted_emails = email_list;
+    sorted_emails.sort();
+    sorted_emails.dedup();
 
     let payload = SendAppointment {
         id: appt_id,
-        email: unique_emails
+        email: sorted_emails
     };
 
     let client = reqwest::Client::new();

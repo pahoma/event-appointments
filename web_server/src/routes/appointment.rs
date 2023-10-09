@@ -75,7 +75,7 @@ pub async fn add_invitation(
         for (email, invitation) in email_invitation_composition {
             let future = async {
                 let image_string = qr_client.generate_qr_code_base64(invitation.short_url.clone()).await?;
-                let email_template = render_template(EMAIL_TEMPLATE_PATH).await?;
+                let email_template = render_template("email").await?;
                 let html_body = email_template.replace("{IMAGE_STRING}", image_string.as_ref());
                 let plain_body = "Hello dear customer.";
                 email_client.send_email(

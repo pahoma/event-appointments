@@ -19,21 +19,15 @@ use shared::configuration::get_configuration;
 pub async fn read_emails() -> io::Result<Vec<Email>> {
     println!("Please list emails to send Appointment invitation':");
 
-    let mut reader = BufReader::new(io::stdin());
+    let mut lines = BufReader::new(io::stdin()).lines();
     let mut emails = Vec::new();
 
-    loop {
-        let mut line = String::new();
-        let bytes_read = reader.read_line(&mut line).await?;
-
-        if bytes_read == 0 || line.trim().is_empty() {
+    while let Ok(Some(line)) = lines.next_line().await {
+        if line.trim().is_empty() {
             break;
         }
-        let email = match Email::parse(line.trim().to_string()) {
-            Ok(email) => email,
-            Err(_) => return Err(io::Error::new(ErrorKind::InvalidData, "Failed to parse Email")),
-        };
-
+        let email = Email::parse(line)
+            .map_err(|_| io::Error::new(ErrorKind::InvalidData, "Failed to parse Email"))?;
         emails.push(email);
     }
 

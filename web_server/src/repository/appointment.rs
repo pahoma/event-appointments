@@ -27,7 +27,7 @@ pub(crate) async fn preserve_new_appointment(
         .bind(new_appointment.address)
         .bind(link)
         .bind(new_appointment.date)
-        .bind(new_appointment.duration.as_secs() as i64)
+        .bind(new_appointment.duration.as_secs() as i32)
         .fetch_one(&mut **transaction)
         .await
         .context("Failed to insert a new appointment into the database.")?;

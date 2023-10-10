@@ -30,7 +30,9 @@ async fn main() -> std::io::Result<()> {
     );
 
     let listener = TcpListener::bind(&address)?;
-    let db_connection_pool = shared::db::initialize().await.map_err(convert_error)?;
+    let db_connection_pool = shared::db::init_db(configuration.database.connection_options_with_db())
+        .map_err(convert_error)?;
+    shared::db::migrate(&db_connection_pool).await.map_err(convert_error)?;
     let qr_client = QRClient::new(
         configuration.qr_client.api_url.clone(),
         configuration.qr_client.api_key.clone(),

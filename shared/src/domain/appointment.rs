@@ -52,7 +52,7 @@ pub struct DBAppointment {
     pub address: Option<String>,
     pub link: Option<String>,
     pub date: NaiveDateTime,
-    pub duration: i64,
+    pub duration: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

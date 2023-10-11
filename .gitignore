@@ -1,0 +1,15 @@
+/.idea/
+/.vscode/
+/*.iml
+.DS_Store
+
+target/*
+qr
+testqr
+configuration/local.yaml
+configuration/development.yaml
+configuration/production.yaml
+
+/6_project/qr
+qr_data
+tickets_cli/qr_data
